@@ -1,0 +1,90 @@
+# ======================================================================
+#  EXAMPLE: a small quest with a story, written entirely in text
+#
+#  To switch it on, rename it to   lugger_quest.talk.txt   and put it
+#  somewhere under BepInEx/plugins. Press F10 in game to load it.
+#
+#  What this shows:
+#    * FLAGS      "set = x" remembers something, "if = x" / "if = !x" checks it.
+#                 Flags are saved between sessions (BepInEx/config/ApocalypterTalk.story.txt).
+#    * BRANCHES   "next = a, b" shows only those choices after a reply.
+#    * HIDDEN     "hidden = true" means a prompt is only reachable through "next".
+#    * INTROS     the NPC's opening line changes as the story moves on.
+#    * ACTIONS    "action = ..." tells other mods something happened (rewards, markers, spawns...).
+#                 With no other mod listening it only writes a line to the log.
+# ======================================================================
+
+# --- first meeting ------------------------------------------------------
+[intro]
+npc      = Lugger
+if       = !lugger_met
+priority = 10
+line     = Hold it. You're not with the Scrapyard crew, are you? ...No. Good.
+set      = lugger_met
+
+# --- coming back before taking the job ----------------------------------
+[intro]
+npc      = Lugger
+if       = lugger_met, !lugger_job_started, !lugger_job_done
+priority = 10
+line     = Back again. Still looking for something to do?
+
+# --- the job is under way ----------------------------------------------
+[intro]
+npc      = Lugger
+if       = lugger_job_started, !lugger_job_done
+priority = 20
+line     = You're back. Did you find my wrenches?
+
+# --- the job is finished -----------------------------------------------
+[intro]
+npc      = Lugger
+if       = lugger_job_done
+priority = 20
+line     = Word travels. You're the one who got my wrenches back. Ask for anything within reason.
+
+# --- ask for work (shown at the top of the list until the job is taken) -
+[prompt]
+id     = lugger_ask_work
+npc    = Lugger
+if     = lugger_met, !lugger_job_started, !lugger_job_done
+order  = -10
+text   = Got any work for me?
+reply  = The Scrapyard crew lifted my wrench set. Bring it back and I'll make it worth your while.
+next   = lugger_accept, lugger_decline
+
+[prompt]
+id     = lugger_accept
+hidden = true
+text   = I'll bring them back.
+reply  = Good. They camp east of the ridge. Don't take the road, they watch it.
+set    = lugger_job_started
+action = quest.start:lugger_wrenches
+
+[prompt]
+id     = lugger_decline
+hidden = true
+text   = Not my problem.
+reply  = Fair. The offer stands if you change your mind.
+
+# --- hand it in (honour system here; a quest mod could set the flag when the player really has the item)
+[prompt]
+id     = lugger_turn_in
+npc    = Lugger
+if     = lugger_job_started, !lugger_job_done
+order  = -10
+text   = I found your wrenches.
+reply  = By the rust gods. Take this, you earned it.
+set    = lugger_job_done
+action = quest.complete:lugger_wrenches
+action = reward.nuts:100
+
+# --- a story that unfolds over several visits (replies are used in order)
+[prompt]
+npc    = Lugger
+if     = lugger_job_done
+text   = What's your story, Lugger?
+mode   = sequence
+reply  = I used to run convoys before the roads died. Now I fix what's left.
+reply  = Had a partner once. The Scrapyard crew took more than my wrenches.
+reply  = That's all you get. Next time, bring a bottle.

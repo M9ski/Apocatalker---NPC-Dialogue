@@ -1,0 +1,316 @@
+======================================================================
+ APOCATALKER - HOW TO ADD YOUR OWN DIALOGUE
+======================================================================
+
+You never need to touch any code. Everything is plain text files you can edit in Notepad++.
+Save them as UTF-8 (Notepad++: Encoding > UTF-8).
+
+TIP: press F10 in game (the ReloadKey setting) and every dialogue file is re-read instantly. No restart needed.
+You can also add and change lines WITHOUT leaving the game, from the Apocasetter Mods menu: see section 1B.
+If something doesn't work, open  BepInEx\LogOutput.log  and search for "Dialogue:" - mistakes
+(typos, unknown names, missing replies) are reported there with the file name and line number.
+
+
+----------------------------------------------------------------------
+ 1. QUICK START: ADD A NEW THING THE PLAYER CAN SAY
+----------------------------------------------------------------------
+Open dialogue.txt, go to the end of the file and add:
+
+    [prompt]
+    text  = Know any good places to scavenge?
+    reply = The old depot east of here. Bring a friend.
+    reply = Depends who's asking. Nobody likes sharing.
+
+That is all. Every NPC now offers "Know any good places to scavenge?" and answers with one of the
+two replies at random. Add as many [prompt] blocks as you want: the list of things to say gets its
+own scroll bar, separate from the chat log, so long lists are fine.
+
+Lines starting with # are comments and are ignored. Blank lines are fine anywhere.
+
+
+----------------------------------------------------------------------
+ 1B. EDITING DIALOGUE IN GAME (APOCASETTER MODS MENU)
+----------------------------------------------------------------------
+If you use the Apocasetter mod menu, open it (default key F6), pick Apocatalker, and scroll to
+the "Dialogue Editor" section. No restart, no Notepad++. Everything takes effect immediately.
+The switches turn themselves OFF again after they have done their job, and the "Last Result"
+box tells you what happened.
+
+ADD A PROMPT
+    New Prompt Text    what the player says (becomes a button)
+    New Prompt Reply   how the NPC answers (or  pool:rumors  for a random line from a pool)
+    New Prompt Npc     optional: only these NPCs offer it, e.g.  Bolter, Lugger
+    Add Prompt Now     switch ON to save it
+
+ADD A LINE TO A POOL (for example to give every NPC another rumor)
+    New Line Pool      the pool name: rumors, smalltalk, greetings ...
+    New Line Text      the line
+    Add Line Now       switch ON to save it
+
+CHANGE OR DELETE A LINE THAT ALREADY EXISTS
+    Find Text          part of the line you mean. It must match exactly ONE line, so type enough
+                       of it. If several lines match, Last Result says so; type more.
+    Replace With       the new text
+    Replace Line Now   switch ON to change the line
+    Delete Line Now    switch ON to delete the line
+  Inside a [prompt] block a line like  reply = ...  or  text = ...  keeps its "reply =" or
+  "text =" part: only what comes after the = is replaced.
+
+RELOAD
+    Reload Now         re-reads every file (use it after editing the .txt files by hand)
+
+Where does it all go?
+  * Prompts and pool lines you ADD are saved in  BepInEx\config\Apocatalker\my_dialogue.txt .
+    That folder is not touched when Apocatalker is updated, so your own writing survives updates.
+    You can open and edit that file in Notepad++ too (same format as dialogue.txt).
+  * CHANGES and DELETES edit the file that contains the line (usually dialogue.txt). A copy of the
+    file as it was is saved next to it with .bak added to the name. Careful: updating Apocatalker
+    replaces dialogue.txt with the new version, so put long-term writing in my_dialogue.txt.
+  * Files from other mods (*.talk.txt) are never changed by the editor.
+Each field is a single line, so for a multi-line reply write  \n  where the line should break.
+Long conversations, branches and quests (sections 3 to 7) are easier to write in a text file.
+
+
+----------------------------------------------------------------------
+ 2. WHICH FILES ARE LOADED
+----------------------------------------------------------------------
+  dialogue.txt                       the main file, next to ApocalypterTalk.dll
+  dialogue\*.txt                     any extra .txt files in the "dialogue" folder next to the DLL
+  anything\*.talk.txt                any file ending in .talk.txt ANYWHERE under BepInEx\plugins
+                                     (this is how separate mods ship their own NPCs and quests)
+  BepInEx\config\Apocatalker\*.txt
+                                     your own files, including my_dialogue.txt from the in-game
+                                     editor. Loaded LAST, so what you write there wins.
+
+Files are read in alphabetical order after dialogue.txt. Line pools (see 5) with the same name are
+merged, so another file can simply add more lines to [rumors].
+Prompt ids (see 3) can be re-used to REPLACE an earlier prompt.
+
+
+----------------------------------------------------------------------
+ 3. [prompt]  - SOMETHING THE PLAYER CAN SAY
+----------------------------------------------------------------------
+    [prompt]
+    id     = lugger_ask_work           optional name, needed if another prompt points to this one
+    text   = Got any work for me?      what the player says (the button text)  [required]
+    reply  = ...                       what the NPC answers; repeat the line for several answers
+    npc    = Lugger                    only these NPCs offer it (see 6). Leave out = everyone
+    if     = lugger_met, !job_done     only shown while these flags are set / not set (see 7)
+    set    = job_started               flags to set (or clear with !name) when it is chosen
+    action = quest.start:lugger        message for other mods (see 9); repeat for several
+    next   = accept, decline           show ONLY these prompts after the reply (see 7)
+    hidden = true                      never in the normal list; only reachable through "next"
+    once   = true                      disappears after being chosen once
+    order  = -10                       list position: lower numbers first (default 0)
+    mode   = sequence                  use the replies in order instead of random (see 7)
+
+Rules for the replies:
+  * reply = some text            the NPC says exactly that
+  * reply = pool:rumors          the NPC says a random line from the [rumors] pool (see 5)
+  * Write  \n  inside a reply to start a new line.
+  * {npc} is replaced with the NPC's name.
+  * With several replies, every one is used once before any repeats.
+
+Only text and one reply are needed. Everything else is optional.
+
+
+----------------------------------------------------------------------
+ 4. [intro]  - WHAT AN NPC SAYS WHEN YOU START TALKING
+----------------------------------------------------------------------
+By default the NPC opens with a random line from the [greetings] pool. An [intro] block replaces
+that for the NPCs and situations it matches:
+
+    [intro]
+    npc      = Bodyguard
+    if       = !met_bodyguard
+    priority = 10
+    line     = Eyes forward. I'm working.
+    line     = Keep your hands where I can see them.
+    set      = met_bodyguard
+
+  line      one possible opening line (repeat for several)
+  npc, if   same meaning as in a prompt
+  priority  when several intros match, the HIGHEST priority wins (default 0). Ties are random.
+  set       flags set when this intro is shown
+  action    messages for other mods
+
+
+----------------------------------------------------------------------
+ 5. LINE POOLS  - SHARED LISTS OF LINES
+----------------------------------------------------------------------
+Any header that is not [prompt] or [intro] is a pool: one line of text per row.
+
+    [rumors]
+    A mechanic past the ridge swears he can fit any part to any car.
+    Don't drink from the ponds south of here.
+
+A prompt uses a pool with  reply = pool:rumors  . Pools exist so that one prompt can have
+hundreds of possible answers. The names [greetings], [smalltalk] and [rumors] are used by the
+default prompts in dialogue.txt, but you can make pools with any name:  [bolter_gossip]
+
+
+----------------------------------------------------------------------
+ 6. TARGETING SPECIFIC NPCs
+----------------------------------------------------------------------
+  npc = Bolter                      only Bolters
+  npc = Bodyguard, Pistoleer        either of these
+  npc = *, !Merchant                everyone except merchants
+  npc = !Bolter, !Lugger            everyone except these two
+
+How matching works:
+  * Part of a name is enough:  "bolt"  matches  Bolter.
+  * Capital letters, spaces, hyphens and "(Clone)1234" suffixes don't matter:
+    "Rip-Off Merchant", "RipOffMerchant" and "rip off merchant" all match the same NPC.
+  * The name is checked against both the NPC's displayed name and its object name.
+  * An exclusion with ! always wins.
+
+FINDING AN NPC'S NAME: talk to them. The BepInEx log prints a line like
+    Dialogue: talking to 'Bolter' (object name 'Bolter(Clone)1320'). Use either name in 'npc = ...'.
+(Which NPCs show the talk prompt at all is set in the mod's config file, NpcNameKeywords.)
+
+Prompts and intros can both be targeted, so each NPC type can have its own conversations,
+its own opening lines, and its own storylines.
+
+
+----------------------------------------------------------------------
+ 7. STORIES AND QUESTS: FLAGS, BRANCHES, SEQUENCES
+----------------------------------------------------------------------
+FLAGS are the memory of the story. A flag is just a name that is either set or not set.
+  * set = met_lugger               sets the flag when the prompt/intro runs
+  * set = !met_lugger              clears it again
+  * if  = met_lugger               only shown while the flag IS set
+  * if  = !job_done                only shown while the flag is NOT set
+  * if  = met_lugger, !job_done    several conditions: ALL must be true
+Flags are saved between game sessions in  BepInEx\config\ApocalypterTalk.story.txt.
+To start the story over, delete that file (or edit it, one flag per line).
+To keep separate progress per save game, set StoryProfile in the config to a different name.
+
+BRANCHES: "next" turns a reply into a small conversation.
+    [prompt]
+    id    = ask_work
+    text  = Got any work for me?
+    reply = The Scrapyard crew took my tools. Bring them back and I'll pay you.
+    next  = accept, decline          <- after the reply, ONLY these two choices are shown
+
+    [prompt]
+    id     = accept
+    hidden = true                    <- not in the normal list
+    text   = I'll bring them back.
+    reply  = Good. They camp east of the ridge.
+    set    = job_started
+
+    [prompt]
+    id     = decline
+    hidden = true
+    text   = Not my problem.
+    reply  = Fair enough.
+
+When a prompt has no "next", the normal list comes back.
+
+SEQUENCES: with  mode = sequence  the replies are used one after another, one per time the prompt
+is chosen, and the last reply repeats. Good for a story told over several visits.
+
+ONCE: with  once = true  the prompt disappears after it has been chosen.
+
+ORDER: quest prompts are easier to find at the top of the list: give them  order = -10 .
+
+A complete working example is in the examples folder (lugger_quest.talk.txt.example).
+
+
+----------------------------------------------------------------------
+ 8. SHIPPING DIALOGUE WITH ANOTHER MOD (CONTENT PACKS)
+----------------------------------------------------------------------
+A separate mod that only adds dialogue or a quest needs no code at all:
+  1. Write  MyQuest.talk.txt  (same format as above).
+  2. Put it in your mod's folder under  BepInEx\plugins\YourMod\ .
+  3. Done. It is found and loaded automatically when the game starts (and on F10).
+Use unique flag names and prompt ids (for example prefix them: mystory_met_lugger) so that two
+mods can't clash by accident. Re-using someone else's prompt id on purpose REPLACES their prompt.
+
+
+----------------------------------------------------------------------
+ 9. FOR C# MODDERS: ACTIONS, FLAGS AND EVENTS
+----------------------------------------------------------------------
+Apocalypter Talk does the TALKING. It does not know how to hand over items, spawn things or draw
+map markers - that is game-specific. Instead, dialogue can send messages ("actions") to your own
+BepInEx plugin, and your plugin can set flags that change what NPCs say.
+
+In the text file:        action = quest.start:lugger_wrenches
+In your plugin:
+
+    using ApocalypterTalk;
+
+    [BepInPlugin("you.luggerquest", "Lugger Quest", "1.0.0")]
+    [BepInDependency("com.example.apocalypter.talk")]       // makes sure Apocalypter Talk loads first
+    public class LuggerQuest : BaseUnityPlugin
+    {
+        void Awake()
+        {
+            TalkApi.ActionTriggered += OnAction;
+        }
+
+        void OnAction(string action, string npcName)
+        {
+            if (action == "quest.start:lugger_wrenches")    { /* spawn the wrenches, add a marker... */ }
+            if (action == "quest.complete:lugger_wrenches") { /* give the reward... */ }
+        }
+
+        void Update()
+        {
+            // let the dialogue react to what the player really did
+            if (PlayerHasWrenches()) TalkApi.SetFlag("has_lugger_wrenches");
+        }
+    }
+
+Reference ApocalypterTalk.dll in your project (add it as a Reference like the other DLLs).
+The action text is passed exactly as written, so you choose the format.
+
+What TalkApi offers:
+  TalkApi.ActionTriggered       event (string action, string npcName)
+  TalkApi.ConversationStarted   event (string npcName)
+  TalkApi.ConversationEnded     event
+  TalkApi.IsTalking             true while the window is open
+  TalkApi.CurrentNpcName        name of the NPC being talked to
+  TalkApi.CurrentNpc            that NPC's Transform (null when not talking)
+  TalkApi.GetFlag(name)         is the flag set?
+  TalkApi.SetFlag(name, true/false)
+  TalkApi.AllFlags()            every flag that is currently set
+  TalkApi.ClearAllFlags()
+  TalkApi.LoadFile(path)        load a dialogue file from anywhere (kept across reloads)
+  TalkApi.Reload()              re-read all dialogue files
+
+If one of your handlers throws an error it is caught and logged; it can't break the conversation.
+
+
+----------------------------------------------------------------------
+ 10. CONFIG FILE (BepInEx\config\com.example.apocalypter.talk.cfg)
+----------------------------------------------------------------------
+  [Dialogue]  ReloadKey          key that re-reads the dialogue files (default F10)
+              LoadPackFiles      load *.talk.txt files from all of BepInEx\plugins (default true)
+              SaveStoryProgress  keep flags between sessions (default true)
+              StoryProfile       name of the progress file; use one per save game
+  [Dialogue Editor]              the in-game editor fields and switches (see 1B)
+  [Detection] NpcNameKeywords    which NPCs show the talk prompt at all
+              HostileNameKeywords  NPCs that never show it (keep "dead" in there so corpses stay silent)
+  [Theme]     WindowWidth, WindowHeight, ChatTextOutline, WindowBorder, WindowPadding, ButtonBorder
+              (the border/padding settings are only needed if you replace the PNG images in the theme folder)
+
+Every setting can also be changed live in the Apocasetter Mods menu; changes apply immediately.
+If you update from an older version, your old config keeps its old values (for example a ReloadKey
+of F9). Change them in the menu, or delete the .cfg file to get the new defaults.
+
+
+----------------------------------------------------------------------
+ 11. TROUBLESHOOTING
+----------------------------------------------------------------------
+  My new prompt doesn't show up
+      * Press F10 (or use Reload Now in the Mods menu), then look in LogOutput.log for lines starting with "Dialogue:".
+      * Did you write [prompt] on its own line, and  text = ...  with an equals sign?
+      * Is there an  npc =  line that doesn't match this NPC? (see 6 for how to find names)
+      * Is an  if =  condition false? Check the flag file (see 7).
+  Nothing happens when I choose a prompt
+      * It needs at least one  reply , set , action or next .
+  "unknown pool" warning
+      * reply = pool:xyz needs a [xyz] section somewhere in the loaded files.
+  Curly quotes or odd symbols look broken in game
+      * Save the file as UTF-8.

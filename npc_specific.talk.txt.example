@@ -1,0 +1,56 @@
+# ======================================================================
+#  EXAMPLE: prompts and greetings that only certain NPCs use
+#
+#  To switch this example on, rename it to   npc_specific.talk.txt
+#  and put it in  BepInEx/plugins/ApocalypterTalk/dialogue/  (or anywhere under BepInEx/plugins).
+#  Press F10 in game to load it without restarting.
+#
+#  "npc = ..." is matched against the NPC's name. Case, spaces and punctuation don't matter,
+#  and part of a name is enough:  Bolter  matches  "Bolter(Clone)1320".
+#  When you talk to someone, the BepInEx log prints the exact names, so you can copy them.
+# ======================================================================
+
+# --- a prompt only Bolters offer ---------------------------------------
+[prompt]
+npc   = Bolter
+text  = You look like you've seen some fights.
+reply = A few. Mostly ones I walked away from.
+reply = Enough to know the loud ones lose first.
+
+# --- a prompt for several NPC types at once ----------------------------
+[prompt]
+npc   = Bodyguard, Pistoleer
+text  = Who pays you to stand around?
+reply = Whoever's still alive to pay me. Right now, that's enough.
+reply = I don't name my employers. Bad for business, worse for health.
+
+# --- everyone EXCEPT merchants -----------------------------------------
+[prompt]
+npc   = *, !Merchant
+text  = Seen any travellers pass through?
+reply = Plenty. Most don't stay long enough to give names.
+reply = A few. Not many with a full tank.
+
+# --- the same question, answered differently by a merchant -------------
+[prompt]
+npc   = Merchant
+text  = How's business?
+reply = Slow. Everyone wants to buy and nobody wants to pay.
+reply = Scarce stock, scarcer customers. But you're here, so maybe it's looking up.
+
+# --- {npc} is replaced by the NPC's name in replies and intros ----------
+[prompt]
+text  = What do they call you?
+reply = Folks call me {npc}. Some even say it politely.
+reply = {npc}. Don't wear it out.
+
+# --- NPC-specific opening lines ----------------------------------------
+# (an [intro] beats the random [greetings] pool; higher priority wins)
+[intro]
+npc  = Bodyguard
+line = Eyes forward. I'm working.
+line = Keep your hands where I can see them. Boss's orders.
+
+[intro]
+npc  = Pup
+line = Hey! Hey, mister! ...Are you a friend or a customer?
