@@ -8,7 +8,7 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
 
     <!-- EDIT THIS if your game is installed somewhere else -->
-    <GameDir>M:\Steam\steamapps\common\Apocalypter</GameDir>
+    <GameDir>CHANGETOYOURGAMEDIR</GameDir>
     <ManagedDir>$(GameDir)\Apocalypter_Data\Managed</ManagedDir>
     <BepInExCoreDir>$(GameDir)\BepInEx\core</BepInExCoreDir>
   </PropertyGroup>
