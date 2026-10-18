@@ -1,6 +1,6 @@
 If you are hoping to compile this mod yourself you need to make one essential change to ApocalypterTalk.csproj
 
-You MUST change <GameDir>CHANGETOYOURGAMEDIR</GameDir>
+You MUST change <GameDir> CHANGETOYOURGAMEDIR </GameDir>
 
 
 
